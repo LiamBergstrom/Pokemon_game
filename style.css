@@ -1,3 +1,119 @@
+* {
+  font-family: "Press Start 2P", cursive;
+}
+
 body {
   background-color: black;
+}
+
+h1 {
+  font-size: 16px;
+  margin: 0;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #ddd;
+}
+
+#overlappingDiv {
+  background-color: black;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+}
+
+#healthbar_interface1 {
+  background-color: white;
+  width: 250px;
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  border: 4px black solid;
+  padding: 12px;
+}
+
+#healthbar_interface2 {
+  background-color: white;
+  width: 250px;
+  position: absolute;
+  top: 330px;
+  right: 50px;
+  border: 4px black solid;
+  padding: 12px;
+}
+
+#health_box {
+  position: relative;
+}
+
+#full_health {
+  height: 5px;
+  background-color: #ccc;
+  margin-top: 10px;
+}
+
+#enemy_health {
+  height: 5px;
+  background-color: green;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+#ally_health {
+  height: 5px;
+  background-color: green;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+#queue {
+  position: absolute;
+  background-color: white;
+  padding: 12px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  cursor: pointer;
+  display: none;
+}
+
+#attack_interface_background {
+  background-color: white;
+  height: 140px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-top: 4px black solid;
+  display: flex;
+}
+
+#attack_buttons {
+  width: 66.66%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+#attack_type {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 33.33%;
+  border-left: 4px black solid;
 }

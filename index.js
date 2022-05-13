@@ -14,6 +14,7 @@ const battleZonesMap = [];
 for (let i = 0; i < battleZonesData.length; i += 70) {
   battleZonesMap.push(battleZonesData.slice(i, 70 + i));
 }
+
 class Boundary {
   static width = 54;
   static height = 54;
@@ -89,7 +90,16 @@ image.onload = () => {
 };
 
 class Sprite {
-  constructor({ position, image, frames = { max: 1 }, sprites = [] }) {
+  constructor({
+    position,
+    image,
+    frames = { max: 1, hold: 10 },
+    sprites,
+    animate = false,
+    isEnemy = false,
+    rotation = 0,
+    name,
+  }) {
     this.position = position;
     this.image = image;
     this.frames = { ...frames, val: 0, elapsed: 0 };
@@ -97,11 +107,29 @@ class Sprite {
       this.width = this.image.width / this.frames.max;
       this.height = this.image.height;
     };
-    this.moving = false;
+    this.animate = animate;
     this.sprites = sprites;
+    this.opacity = 1;
+    this.health = 100;
+    this.isEnemy = isEnemy;
+    this.rotation = rotation;
+    this.name = name;
   }
 
   draw() {
+    c.save();
+    //för rotations positionering (c.translate)
+    c.translate(
+      this.position.x + this.width / 2,
+      this.position.y + this.height / 2
+    );
+    c.rotate(this.rotation);
+    c.translate(
+      -this.position.x - this.width / 2,
+      -this.position.y - this.height / 2
+    );
+
+    c.globalAlpha = this.opacity;
     c.drawImage(
       this.image,
       this.frames.val * this.width,
@@ -113,15 +141,116 @@ class Sprite {
       this.image.width / this.frames.max,
       this.image.height
     );
-    if (!this.moving) return;
+    c.restore();
+    if (!this.animate) return;
 
     if (this.frames.max > 1) {
       this.frames.elapsed++;
     }
 
-    if (this.frames.elapsed % 10 === 0) {
+    if (this.frames.elapsed % this.frames.hold === 0) {
       if (this.frames.val < this.frames.max - 1) this.frames.val++;
       else this.frames.val = 0;
+    }
+  }
+
+  attack({ attack, recipient, renderedSprites }) {
+    document.querySelector("#queue").style.display = "block";
+    document.querySelector("#queue").innerHTML =
+      this.name + " used " + attack.name;
+
+    let healthBar = "#enemy_health";
+    if (this.isEnemy) healthBar = "#ally_health";
+    let rotation = 1;
+    if (this.isEnemy) rotation = -2.2;
+
+    this.health = this.health - attack.damage;
+
+    switch (attack.name) {
+      case "Fireball":
+        const fireballImage = new Image();
+        fireballImage.src = "./images/fireball.png";
+
+        const fireball = new Sprite({
+          position: {
+            x: this.position.x,
+            y: this.position.y,
+          },
+          image: fireballImage,
+          frames: {
+            max: 4,
+            hold: 10,
+          },
+          animate: true,
+          rotation,
+        });
+
+        renderedSprites.splice(1, 0, fireball);
+
+        gsap.to(fireball.position, {
+          x: recipient.position.x,
+          y: recipient.position.y,
+          onComplete: () => {
+            // for enemy
+            gsap.to(healthBar, {
+              width: this.health + "%",
+            });
+
+            gsap.to(recipient.position, {
+              x: recipient.position.x + 10,
+              yoyo: true,
+              repeat: 5,
+              duration: 0.08,
+            });
+
+            gsap.to(recipient, {
+              opacity: 0,
+              repeat: 5,
+              yoyo: true,
+              duration: 0.08,
+            });
+            renderedSprites.splice(1, 1);
+          },
+        });
+        break;
+      case "Tackle":
+        const tl = gsap.timeline();
+
+        // så att enemy också har samma movement
+        let movementDistance = 20;
+        if (this.isEnemy) movementDistance = -20;
+
+        tl.to(this.position, {
+          x: this.position.x - movementDistance,
+        })
+          .to(this.position, {
+            x: this.position.x + movementDistance * 2,
+            duration: 0.1,
+            // for enemy
+            onComplete: () => {
+              gsap.to(healthBar, {
+                width: this.health + "%",
+              });
+
+              gsap.to(recipient.position, {
+                x: recipient.position.x + 10,
+                yoyo: true,
+                repeat: 5,
+                duration: 0.08,
+              });
+
+              gsap.to(recipient, {
+                opacity: 0,
+                repeat: 5,
+                yoyo: true,
+                duration: 0.08,
+              });
+            },
+          })
+          .to(this.position, {
+            x: this.position.x,
+          });
+        break;
     }
   }
 }
@@ -135,6 +264,7 @@ const player = new Sprite({
   image: playerDownImage,
   frames: {
     max: 4,
+    hold: 10,
   },
   sprites: {
     up: playerUpImage,
@@ -196,7 +326,7 @@ function animate() {
   player.draw();
 
   let moving = true;
-  player.moving = false;
+  player.animate = false;
 
   if (battle.initiated) return;
   // Battlezone detection (collision) samt lite matte för att en interaktion inte ska ske utanför buskarna.
@@ -256,7 +386,7 @@ function animate() {
   }
 
   if (keys.w.pressed && lastKey === "w") {
-    player.moving = true;
+    player.animate = true;
     player.image = player.sprites.up;
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i];
@@ -282,7 +412,7 @@ function animate() {
         movable.position.y += 3;
       });
   } else if (keys.a.pressed && lastKey === "a") {
-    player.moving = true;
+    player.animate = true;
     player.image = player.sprites.left;
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i];
@@ -307,7 +437,7 @@ function animate() {
         movable.position.x += 3;
       });
   } else if (keys.s.pressed && lastKey === "s") {
-    player.moving = true;
+    player.animate = true;
     player.image = player.sprites.down;
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i];
@@ -332,7 +462,7 @@ function animate() {
         movable.position.y -= 3;
       });
   } else if (keys.d.pressed && lastKey === "d") {
-    player.moving = true;
+    player.animate = true;
     player.image = player.sprites.right;
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i];
@@ -360,26 +490,10 @@ function animate() {
 }
 
 // den nya loopen som animeras efter battle collision animering
-animate();
 
-const battleBackgroundImage = new Image();
-
-battleBackgroundImage.src = "./images/battleBackground.png";
-const battleBackground = new Sprite({
-  position: {
-    x: 0,
-    y: 0,
-  },
-  image: battleBackgroundImage,
-});
-
-function animateBattle() {
-  window.requestAnimationFrame(animateBattle);
-  battleBackground.draw();
-}
+// animate();
 
 let lastKey = "";
-
 window.addEventListener("keydown", (e) => {
   switch (e.key) {
     case "w":

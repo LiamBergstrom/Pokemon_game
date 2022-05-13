@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,19 +15,33 @@
   </head>
   <body>
     <div style="display: inline-block; position: relative">
-      <div
-        id="overlappingDiv"
-        style="
-          background-color: black;
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          opacity: 0;
-        "
-      ></div>
+      <div id="overlappingDiv"></div>
+
+      <!-- Draggle Healthbar (enemy) -->
+      <div id="healthbar_interface1">
+        <h1>Draggle</h1>
+        <div id="health_box">
+          <div id="full_health"></div>
+          <div id="enemy_health"></div>
+        </div>
+      </div>
+
+      <!-- Emby Healthbar (ally)-->
+      <div id="healthbar_interface2">
+        <h1>Emby</h1>
+        <div id="health_box">
+          <div id="full_health"></div>
+          <div id="ally_health"></div>
+        </div>
+      </div>
+
       <canvas> </canvas>
+
+      <div id="attack_interface_background">
+        <div id="queue">sadad</div>
+        <div id="attack_buttons"></div>
+        <div id="attack_type"><h1>Attack Type</h1></div>
+      </div>
     </div>
   </body>
 </html>
@@ -34,4 +54,8 @@
 ></script>
 <script src="./data/battleZones.js"></script>
 <script src="./data/collisions.js"></script>
+<script src="./data/attacks.js"></script>
+<script src="./data/monsters.js"></script>
+<script src="classes.js"></script>
 <script src="index.js"></script>
+<script src="battleScene.js"></script>
