@@ -1,6 +1,5 @@
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext("2d");
-console.log(gsap);
 
 canvas.width = 1024;
 canvas.height = 576;
@@ -68,8 +67,6 @@ battleZonesMap.forEach((row, i) => {
   });
 });
 
-console.log(battleZones);
-
 const image = new Image();
 image.src = "./images/map.png";
 
@@ -96,24 +93,21 @@ class Sprite {
     frames = { max: 1, hold: 10 },
     sprites,
     animate = false,
-    isEnemy = false,
     rotation = 0,
-    name,
   }) {
     this.position = position;
-    this.image = image;
+    this.image = new Image();
     this.frames = { ...frames, val: 0, elapsed: 0 };
     this.image.onload = () => {
       this.width = this.image.width / this.frames.max;
       this.height = this.image.height;
     };
+    this.image.src = image.src;
+
     this.animate = animate;
     this.sprites = sprites;
     this.opacity = 1;
-    this.health = 100;
-    this.isEnemy = isEnemy;
     this.rotation = rotation;
-    this.name = name;
   }
 
   draw() {
@@ -153,6 +147,44 @@ class Sprite {
       else this.frames.val = 0;
     }
   }
+}
+
+class Monster extends Sprite {
+  constructor({
+    position,
+    image,
+    frames = { max: 1, hold: 10 },
+    sprites,
+    animate = false,
+    rotation = 0,
+    isEnemy = false,
+    name,
+    attacks,
+  }) {
+    super({
+      position,
+      image,
+      frames,
+      sprites,
+      animate,
+      rotation,
+    });
+    this.health = 100;
+    this.isEnemy = isEnemy;
+    this.name = name;
+    this.attacks = attacks;
+  }
+
+  faint() {
+    document.querySelector("#queue").innerHTML = this.name + " fainted!";
+    gsap.to(this.position, {
+      y: this.position.y + 20,
+    });
+
+    gsap.to(this, {
+      opacity: 0,
+    });
+  }
 
   attack({ attack, recipient, renderedSprites }) {
     document.querySelector("#queue").style.display = "block";
@@ -164,7 +196,7 @@ class Sprite {
     let rotation = 1;
     if (this.isEnemy) rotation = -2.2;
 
-    this.health = this.health - attack.damage;
+    recipient.health = this.health - attack.damage;
 
     switch (attack.name) {
       case "Fireball":
@@ -193,7 +225,7 @@ class Sprite {
           onComplete: () => {
             // for enemy
             gsap.to(healthBar, {
-              width: this.health + "%",
+              width: recipient.health + "%",
             });
 
             gsap.to(recipient.position, {
@@ -229,7 +261,7 @@ class Sprite {
             // for enemy
             onComplete: () => {
               gsap.to(healthBar, {
-                width: this.health + "%",
+                width: recipient.health + "%",
               });
 
               gsap.to(recipient.position, {
@@ -321,6 +353,8 @@ function animate() {
   });
   battleZones.forEach((battleZone) => {
     battleZone.draw();
+
+    document.querySelector("#user_interface").style.display = "none";
   });
 
   player.draw();
@@ -352,8 +386,6 @@ function animate() {
         overlappingArea > (player.width * player.height) / 2 &&
         Math.random() < 0.01
       ) {
-        console.log("battle zone collision");
-
         //avaktivera loopen
         window.cancelAnimationFrame(animationId);
         battle.initiated = true;
@@ -370,7 +402,7 @@ function animate() {
               duration: 0.4,
               onComplete() {
                 // aktivera en ny loop för att det inte ska förvara på blackscreen med opacity 1
-
+                initBattle();
                 animateBattle();
                 gsap.to("#overlappingDiv", {
                   opacity: 0,
@@ -490,8 +522,6 @@ function animate() {
 }
 
 // den nya loopen som animeras efter battle collision animering
-
-// animate();
 
 let lastKey = "";
 window.addEventListener("keydown", (e) => {
