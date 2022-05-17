@@ -6,6 +6,12 @@ body {
   background-color: black;
 }
 
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 h1 {
   font-size: 16px;
   margin: 0;
